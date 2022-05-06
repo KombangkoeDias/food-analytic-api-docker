@@ -4,9 +4,7 @@
 ### Installation
 
 
-```
-pip install -r requirements.txt
-```
+```install according to the SegmentationAPI/install_steps.sh```
 
 ### Start application
 

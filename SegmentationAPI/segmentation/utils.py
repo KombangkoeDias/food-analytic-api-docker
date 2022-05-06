@@ -11,7 +11,7 @@ class ConfigClass():
 
 class Utils:
     def __init__(self):
-        self.root_path = 'segmentation'
+        self.root_path = 'SegmentationAPI/segmentation'
         self.ingredients = self.getIngredients()
         self.id2label = self.getid2label()
         self.label2id = self.getlabel2id()
