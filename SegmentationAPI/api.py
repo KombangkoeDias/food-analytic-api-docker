@@ -8,7 +8,6 @@ from .segmentation import SETR_MLA
 
 segmentation_api = Blueprint('segmentation_api', __name__)
 
-
 ### Tests
 @segmentation_api.route('/', methods=['GET'])
 def main():
@@ -40,11 +39,12 @@ def inference():
     byte_arr = file.read()
     img_numpy = np.frombuffer(byte_arr, np.uint8)
     imgBGR = cv2.imdecode(img_numpy, cv2.IMREAD_COLOR)
-    prediction = SETR_MLA.predict(imgBGR)
-    base64Image = SETR_MLA.visualization.getVisualization(prediction, base64=True)
+    return segmentation_inference(imgBGR)
+
+def segmentation_inference(imgBGR):
+    prediction = SETR_MLA.predict(imgBGR) # prediction
+    base64Image = SETR_MLA.visualization.getVisualization(prediction, base64=True) # visualization
     return {"prediction": prediction, "visualization": base64Image}
-
-
 
 
 

@@ -17,8 +17,7 @@ class Utils:
         self.label2id = self.getlabel2id()
     def getIngredients(self):
         ingredients = dict()
-        category_id_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), './category_id.txt')
-        with open(os.path.abspath(category_id_path)) as f:
+        with open(os.path.abspath(f"{self.root_path}/category_id.txt")) as f:
             for line in f:
                 data = line.strip().split()
                 Id = data[0]
