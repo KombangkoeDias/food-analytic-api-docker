@@ -3,7 +3,7 @@ import cv2
 import torch
 from .dpt.models import DPTDepthModel
 from .configs import dpt_config
-from torchvision.transforms import Compose, ToTensor
+from torchvision.transforms import Compose
 from .dpt.transforms import Resize, NormalizeImage, PrepareForNet
 
 
@@ -20,9 +20,8 @@ class DepthInferenceWrapper:
         image = image.to(self.device)
         inv_depth = self.model(image)
         inv_depth = inv_depth.cpu().detach().numpy()
-        depth = 1 / inv_depth
-        depth = depth[0].tolist()
-        return depth
+        inv_depth = inv_depth[0].tolist()
+        return inv_depth
 
 
 class DPTInferenceWrapper(DepthInferenceWrapper):
