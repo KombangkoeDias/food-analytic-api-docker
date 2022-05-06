@@ -25,10 +25,10 @@ def receiveFoodImageAndClassify():
         output = nn.Softmax(dim=0)(output)
         topKPredictedClassValue, topKPredictedClassIdx = torch.topk(output, config["top_k"])
         
-    prediction = {}
+    prediction = []
     for i in range(config["top_k"]):
         classname = config["idx_to_class"][topKPredictedClassIdx[i].item()]
         prob = topKPredictedClassValue[i].item()
-        prediction[classname] = prob
+        prediction.append([classname, prob])
 
     return jsonify({"prediction": prediction})
