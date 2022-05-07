@@ -1,3 +1,4 @@
+from SegmentationAPI.segmentation import visualization
 from flask import Blueprint
 from flask import request
 import cv2
@@ -38,13 +39,18 @@ def inference():
         return '''<h1>No Image Received</h1>''', 500
     byte_arr = file.read()
     img_numpy = np.frombuffer(byte_arr, np.uint8)
-    imgBGR = cv2.imdecode(img_numpy, cv2.IMREAD_COLOR)
-    return segmentation_inference(imgBGR)
+    return segmentation_inference(img_numpy)
 
-def segmentation_inference(imgBGR):
-    prediction = SeMask_FPN.predict(imgBGR) # prediction
+@segmentation_api.route('/visualize', methods=['POST'])
+def visualize():
+    prediction = inference()['prediction']
     base64Image = SeMask_FPN.visualization.getVisualization(prediction, base64=True) # visualization
     return {"prediction": prediction, "visualization": base64Image}
+
+def segmentation_inference(img):
+    imgBGR = cv2.imdecode(img, cv2.IMREAD_COLOR)
+    prediction = SeMask_FPN.predict(imgBGR) # prediction
+    return {"prediction": prediction}
 
 
 
