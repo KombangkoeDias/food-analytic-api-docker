@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import os
 from .segmentation import utils
-from .segmentation import SETR_MLA
+from .segmentation import SeMask_FPN
 
 segmentation_api = Blueprint('segmentation_api', __name__)
 
@@ -19,7 +19,7 @@ def test():
 
 @segmentation_api.route('/test/inference', methods=['GET'])
 def test_inference():
-    return {"test_inference":  SETR_MLA.predict(os.path.abspath('imgs/test.jpg'))}
+    return {"test_inference":  SeMask_FPN.predict(os.path.abspath('imgs/test.jpg'))}
 
 ### Classes
 @segmentation_api.route('/classes/id2label', methods=['GET'])
@@ -42,8 +42,8 @@ def inference():
     return segmentation_inference(imgBGR)
 
 def segmentation_inference(imgBGR):
-    prediction = SETR_MLA.predict(imgBGR) # prediction
-    base64Image = SETR_MLA.visualization.getVisualization(prediction, base64=True) # visualization
+    prediction = SeMask_FPN.predict(imgBGR) # prediction
+    base64Image = SeMask_FPN.visualization.getVisualization(prediction, base64=True) # visualization
     return {"prediction": prediction, "visualization": base64Image}
 
 
