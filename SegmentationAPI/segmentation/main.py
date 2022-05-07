@@ -16,7 +16,7 @@ class SegmentationInferenceWrapper():
     def predict(self, img):
         pass
 
-class SETR_MLA_InferenceWrapper(SegmentationInferenceWrapper):
+class SeMask_FPN_InferenceWrapper(SegmentationInferenceWrapper):
     def __init__(self, model):
         super().__init__(model)    
 
@@ -26,7 +26,7 @@ class SETR_MLA_InferenceWrapper(SegmentationInferenceWrapper):
         prediction = prediction[0].tolist()
         return prediction
 
-SETR_MLA = SETR_MLA_InferenceWrapper(model)
+SeMask_FPN = SeMask_FPN_InferenceWrapper(model)
 
 
 

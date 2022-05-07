@@ -5,5 +5,8 @@ pip install openmim
 mim install mmcv-full
 pip install terminaltables timm mmcls
 pip install pillow requests numpy tqdm pandas
-pip install -e SegmentationAPI/segmentation/setr_mla
+pip install -e SegmentationAPI/segmentation/SeMask-FPN
 pip install -r requirements.txt
+pip install gdown
+# download the checkpoint file.
+gdown --id 1-9YxLCHIFV78BjVATlIA0DIIKRSabbwW -O SegmentationAPI/segmentation/checkpoints/final.pth

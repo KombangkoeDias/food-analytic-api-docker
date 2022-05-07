@@ -1,4 +1,4 @@
-from .main import SETR_MLA
+from .main import SeMask_FPN
 from .utils import utils
 
-__all__ = ['SETR_MLA', 'utils']
+__all__ = ['SeMask_FPN', 'utils']
