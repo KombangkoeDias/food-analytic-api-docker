@@ -6,7 +6,7 @@ from .config import config
 class foodNet(nn.Module):
   def __init__(self):
     super(foodNet, self).__init__()
-    self.pretrained_model = timm.create_model(config["model_name"], pretrained=True)
+    self.pretrained_model = timm.create_model(config["model_name"], pretrained=False)
     self.pretrained_model.head.fc = nn.Linear(self.pretrained_model.head.fc.in_features, len(config["idx_to_class"]))
 
   def forward(self, input):
