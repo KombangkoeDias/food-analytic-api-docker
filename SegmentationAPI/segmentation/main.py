@@ -4,6 +4,7 @@ import torch
 from mmseg.apis import inference_segmentor
 from .model import model
 from .utils import config
+import numpy as np
 
 class SegmentationInferenceWrapper():
     def __init__(self, model):
@@ -16,17 +17,17 @@ class SegmentationInferenceWrapper():
     def predict(self, img):
         pass
 
-class SETR_MLA_InferenceWrapper(SegmentationInferenceWrapper):
+class SeMask_FPN_InferenceWrapper(SegmentationInferenceWrapper):
     def __init__(self, model):
         super().__init__(model)    
 
     # override
     def predict(self, img):
         prediction = inference_segmentor(self.model, img)
-        prediction = prediction[0].tolist()
+        prediction = np.array(prediction[0])[0].tolist()
         return prediction
 
-SETR_MLA = SETR_MLA_InferenceWrapper(model)
+SeMask_FPN = SeMask_FPN_InferenceWrapper(model)
 
 
 

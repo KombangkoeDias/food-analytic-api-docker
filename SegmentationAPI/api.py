@@ -1,10 +1,11 @@
+from SegmentationAPI.segmentation import visualization
 from flask import Blueprint
 from flask import request
 import cv2
 import numpy as np
 import os
 from .segmentation import utils
-from .segmentation import SETR_MLA
+from .segmentation import SeMask_FPN
 
 segmentation_api = Blueprint('segmentation_api', __name__)
 
@@ -19,7 +20,7 @@ def test():
 
 @segmentation_api.route('/test/inference', methods=['GET'])
 def test_inference():
-    return {"test_inference":  SETR_MLA.predict(os.path.abspath('imgs/test.jpg'))}
+    return {"test_inference":  SeMask_FPN.predict(os.path.abspath('imgs/test.jpg'))}
 
 ### Classes
 @segmentation_api.route('/classes/id2label', methods=['GET'])
@@ -38,13 +39,18 @@ def inference():
         return '''<h1>No Image Received</h1>''', 500
     byte_arr = file.read()
     img_numpy = np.frombuffer(byte_arr, np.uint8)
-    imgBGR = cv2.imdecode(img_numpy, cv2.IMREAD_COLOR)
-    return segmentation_inference(imgBGR)
+    return segmentation_inference(img_numpy)
 
-def segmentation_inference(imgBGR):
-    prediction = SETR_MLA.predict(imgBGR) # prediction
-    base64Image = SETR_MLA.visualization.getVisualization(prediction, base64=True) # visualization
+@segmentation_api.route('/visualize', methods=['POST'])
+def visualize():
+    prediction = inference()['prediction']
+    base64Image = SeMask_FPN.visualization.getVisualization(prediction, base64=True) # visualization
     return {"prediction": prediction, "visualization": base64Image}
+
+def segmentation_inference(img):
+    imgBGR = cv2.imdecode(img, cv2.IMREAD_COLOR)
+    prediction = SeMask_FPN.predict(imgBGR) # prediction
+    return {"prediction": prediction}
 
 
 
