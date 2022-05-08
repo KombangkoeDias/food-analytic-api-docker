@@ -71,76 +71,7 @@ test_pipeline = [
             dict(type='Collect', keys=['img'])
         ])
 ]
-data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=2,
-    train=dict(
-        type='FoodSeg103Dataset',
-        data_root='/content/FoodSeg103/Images',
-        img_dir='img_dir/test',
-        ann_dir='ann_dir/test',
-        pipeline=[
-            dict(type='LoadImageFromFile'),
-            dict(type='LoadAnnotations'),
-            dict(
-                type='Resize', img_scale=(2049, 1025), ratio_range=(0.5, 2.0)),
-            dict(type='RandomCrop', crop_size=(640, 640), cat_max_ratio=0.75),
-            dict(type='RandomFlip', prob=0.5),
-            dict(
-                type='Normalize',
-                mean=[123.675, 116.28, 103.53],
-                std=[58.395, 57.12, 57.375],
-                to_rgb=True),
-            dict(type='Pad', size=(640, 640), pad_val=0, seg_pad_val=255),
-            dict(type='DefaultFormatBundle'),
-            dict(type='Collect', keys=['img', 'gt_semantic_seg'])
-        ]),
-    val=dict(
-        type='FoodSeg103Dataset',
-        data_root='/content/FoodSeg103/Images',
-        img_dir='img_dir/test',
-        ann_dir='ann_dir/test',
-        pipeline=[
-            dict(type='LoadImageFromFile'),
-            dict(
-                type='MultiScaleFlipAug',
-                img_scale=(2049, 1025),
-                flip=False,
-                transforms=[
-                    dict(type='Resize', keep_ratio=True),
-                    dict(type='RandomFlip'),
-                    dict(
-                        type='Normalize',
-                        mean=[123.675, 116.28, 103.53],
-                        std=[58.395, 57.12, 57.375],
-                        to_rgb=True),
-                    dict(type='ImageToTensor', keys=['img']),
-                    dict(type='Collect', keys=['img'])
-                ])
-        ]),
-    test=dict(
-        type='FoodSeg103Dataset',
-        data_root='/content/FoodSeg103/Images',
-        img_dir='img_dir/test',
-        ann_dir='ann_dir/test',
-        pipeline=[
-            dict(type='LoadImageFromFile'),
-            dict(
-                type='MultiScaleFlipAug',
-                img_scale=(2049, 1025),
-                flip=False,
-                transforms=[
-                    dict(type='Resize', keep_ratio=True),
-                    dict(type='RandomFlip'),
-                    dict(
-                        type='Normalize',
-                        mean=[123.675, 116.28, 103.53],
-                        std=[58.395, 57.12, 57.375],
-                        to_rgb=True),
-                    dict(type='ImageToTensor', keys=['img']),
-                    dict(type='Collect', keys=['img'])
-                ])
-        ]))
+
 log_config = dict(
     interval=50, hooks=[dict(type='TextLoggerHook', by_epoch=False)])
 dist_params = dict(backend='nccl')
@@ -159,7 +90,7 @@ lr_config = dict(
     warmup_ratio=1e-07,
     min_lr=1e-08,
     by_epoch=False)
-runner = dict(type='IterBasedRunner', max_iters=10000)
+runner = dict(type='IterBasedRunner', max_iters=80000)
 checkpoint_config = dict(by_epoch=False, interval=5000)
 evaluation = dict(interval=5000, metric='mIoU')
 train_cfg = dict()
