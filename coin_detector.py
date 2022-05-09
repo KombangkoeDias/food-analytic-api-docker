@@ -174,7 +174,7 @@ class CoinDetector():
 
 
 if __name__ == '__main__':
-	coinDetector = coin_detector()
+	coinDetector = CoinDetector()
 	images = []
 	input_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)),"input")
 	output_folder =os.path.join(os.path.dirname(os.path.realpath(__file__)), "output") 
