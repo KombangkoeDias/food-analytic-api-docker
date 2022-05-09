@@ -2,7 +2,7 @@ from flask import request, jsonify, Blueprint
 from PIL import Image
 import torch
 from torch import nn
-from .utils import transform
+from .utils import transform, find_nutrients_dict
 from .model import model
 from .config import config
 
@@ -25,10 +25,12 @@ def receiveFoodImageAndClassify():
         output = nn.Softmax(dim=0)(output)
         topKPredictedClassValue, topKPredictedClassIdx = torch.topk(output, config["top_k"])
         
-    prediction = []
+    predictions = []
     for i in range(config["top_k"]):
-        classname = config["idx_to_class"][topKPredictedClassIdx[i].item()]
-        prob = topKPredictedClassValue[i].item()
-        prediction.append([classname, prob])
+        prediction = {}
+        prediction["food name"] = config["idx_to_class"][topKPredictedClassIdx[i].item()]
+        prediction["probability"] = topKPredictedClassValue[i].item()
+        prediction["nutrients (per 100g of food)"] = find_nutrients_dict(prediction["food name"])
+        predictions.append(prediction)
 
-    return jsonify({"prediction": prediction})
+    return jsonify({"predictions": predictions})
