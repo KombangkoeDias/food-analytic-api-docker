@@ -5,6 +5,8 @@ import numpy as np
 import os
 from volume_estimator import VolumeEstimator
 
+volumeEstimator = VolumeEstimator()
+
 
 volume_estimation_api = Blueprint('volume_estimation_api', __name__)
 
@@ -49,7 +51,6 @@ def totalVolume():
 
 def volume_estimation_inference(img):
     imgBGR = cv2.imdecode(img, cv2.IMREAD_COLOR)
-    volumeEstimator = VolumeEstimator()
     prediction = volumeEstimator.estimate_volume(imgBGR) # prediction
     return {"prediction": prediction}
 
