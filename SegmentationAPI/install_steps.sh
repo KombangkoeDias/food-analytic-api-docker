@@ -9,4 +9,4 @@ pip install -e SegmentationAPI/segmentation/SeMask-FPN
 pip install -r requirements.txt
 pip install gdown
 # download the checkpoint file.
-gdown --id 141lq_mb6Ayku4u5abMoWgcpvhLWDrxfw -O SegmentationAPI/segmentation/checkpoints/final.pth
+gdown --id 1ifkfOry5d73zxs2p8sKv8hzsxk82o32M -O SegmentationAPI/segmentation/checkpoints/final.pth
