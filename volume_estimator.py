@@ -36,6 +36,43 @@ class VolumeEstimator():
         depth = 1 / np.asarray(inverse_depth)
         return depth 
 
+    def get_point_cloud(self, input_image_bgr, fov=70):
+        # Load input image and resize to model input size
+        img = input_image_bgr
+        input_image_shape = img.shape
+        print(input_image_shape)
+        # img = cv2.resize(img, (self.model_input_shape[1],
+        #                        self.model_input_shape[0]))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        # now img is in rbg format
+
+        # Create intrinsics matrix
+        intrinsics_mat = self.__create_intrinsics_matrix(input_image_shape, fov)
+        intrinsics_inv = np.linalg.inv(intrinsics_mat)
+
+        # Predict depth
+        
+
+        # disparity_map = (self.min_disp + (self.max_disp - self.min_disp) 
+        #                  * inverse_depth)
+
+        depth = self.get_depth_from_image(img)
+
+
+        # depth is now numpy 
+        # Convert depth map to point cloud
+        depth_tensor = K.variable(np.expand_dims(depth, 0))
+        intrinsics_inv_tensor = K.variable(np.expand_dims(intrinsics_inv, 0))
+        point_cloud = K.eval(get_cloud(depth_tensor, intrinsics_inv_tensor))
+        print("Done createing point_cloud")
+        point_cloud_flat = np.reshape( point_cloud, (point_cloud.shape[1] * point_cloud.shape[2], 3))
+
+        print(point_cloud)
+        print(point_cloud.shape)
+        print(point_cloud_flat.shape)
+
+
 
     def get_segmentation_mask(self,input_image_rgb):
         # Predict boolean mask of all ingredient found in image 
@@ -109,6 +146,7 @@ class VolumeEstimator():
         return ellipse_params
 
 
+
     def scale_with_coin(self,img_bgr,point_cloud):
        # Scale depth map with coin detection (cx, cy, a, b, theta) 
         scaling = 1
@@ -151,7 +189,7 @@ class VolumeEstimator():
         # Predict segmentation masks        
 
 
-    def estimate_volume(self, input_image_bgr, fov=70):
+    def estimate_volume(self, input_image_bgr, fov=70,coin_scale = False):
         """Volume estimation procedure.
 
         Inputs:
@@ -202,11 +240,14 @@ class VolumeEstimator():
 
 
         # Scale depth map with coin detection
+        print("Use sacle ?",coin_scale)
 
-        scaling = self.scale_with_coin(input_image_bgr,point_cloud)
-        depth = scaling * depth
-        point_cloud = scaling * point_cloud
-        point_cloud_flat = scaling * point_cloud_flat
+        if coin_scale:
+            print("Use scale")
+            scaling = self.scale_with_coin(input_image_bgr,point_cloud)
+            depth = scaling * depth
+            point_cloud = scaling * point_cloud
+            point_cloud_flat = scaling * point_cloud_flat
 
         # Predict segmentation masks
         masks_array , masks_type = self.get_segmentation_mask(img)
@@ -338,5 +379,7 @@ class VolumeEstimator():
 
 if __name__ == '__main__':
     volumeEstimator = VolumeEstimator()
-    img = cv2.imread("imgs/test.jpg")
-    volumeEstimator.test_scaling(img)
+    img = cv2.imread("imgs/coin-img.jpg")
+    print("image size ",img.shape)
+    # volumeEstimator.
+    volumeEstimator.get_point_cloud(img)

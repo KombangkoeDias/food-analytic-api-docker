@@ -28,8 +28,12 @@ def inference():
     if (file.filename == ""):
         return '''<h1>No Image Received</h1>''', 500
     byte_arr = file.read()
+    args = request.args
+    fov = args.get('fov', default=70, type=int) 
+    scale_coin = args.get('fov', default=True, type=bool) 
+    print("params---> ",fov,scale_coin)
     img_numpy = np.frombuffer(byte_arr, np.uint8)
-    return volume_estimation_inference(img_numpy)
+    return volume_estimation_inference(img_numpy,fov,scale_coin)
 
 
 @volume_estimation_api.route('/totalVolume', methods=['POST'])
@@ -39,7 +43,11 @@ def totalVolume():
         return '''<h1>No Image Received</h1>''', 500
     byte_arr = file.read()
     img_numpy = np.frombuffer(byte_arr, np.uint8)
-    return {"prediction":volume_estimation_inference(img_numpy)["prediction"]["total"]}
+    args = request.args
+    fov = args.get('fov', default=70, type=int) 
+    scale_coin = args.get('fov', default=True, type=bool) 
+    print("params---> ",fov,scale_coin)
+    return {"prediction":volume_estimation_inference(img_numpy,fov,scale_coin)["prediction"]["total"]}
 
 
 # @volume_estimation_api.route('/visualize', methods=['POST'])
@@ -49,8 +57,8 @@ def totalVolume():
 #     return {"prediction": prediction, "visualization": base64Image}
 
 
-def volume_estimation_inference(img):
+def volume_estimation_inference(img,fov,scale_coin):
     imgBGR = cv2.imdecode(img, cv2.IMREAD_COLOR)
-    prediction = volumeEstimator.estimate_volume(imgBGR) # prediction
+    prediction = volumeEstimator.estimate_volume(imgBGR,fov,scale_coin) # prediction
     return {"prediction": prediction}
 
