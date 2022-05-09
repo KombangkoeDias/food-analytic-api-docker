@@ -1,7 +1,7 @@
 # food-image-analytic-API
 
 ## ClassificationAPI
-- Download [model weight](https://drive.google.com/file/d/1mkTyp4KKlX50bior0pUxuDdQ5pRftAqT/view?usp=sharing), place the file in /ClassificationAPI, and rename to "model_weight.pt"
+- Download [model weight](https://drive.google.com/file/d/1--rIEfBR6AgPXFXzldA30EdA9bk_Y_j6/view?usp=sharing), place the file in /ClassificationAPI, and rename to "model_weight.pt"
 - Optional: you can also change the value (k) of "top_k" in /ClassificationAPI/config.py to any number from 1 to 330, this will return the top-k class prediction.
 
 ## SegmentationAPI
