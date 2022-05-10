@@ -13,6 +13,8 @@ from DepthAPI.depth import dpt
 from SegmentationAPI.segmentation import utils , SeMask_FPN 
 from SegmentationAPI.api import segmentation_inference
 from coin_detector import CoinDetector
+import tensorflow as tf
+import open3d as  o3d
 
 
 class VolumeEstimator():
@@ -22,7 +24,7 @@ class VolumeEstimator():
         self.model_input_shape = model_input_shape
         self.relax_param = relax_param
         self.coinDetector = CoinDetector()
-        self.coin_diameter_prior = 0.026  # 10 Baht diameter
+        self.coin_diameter_prior = 2.6  # 10 Baht diameter
 
 
     def get_depth_from_image(self,input_image_rgb):
@@ -149,7 +151,7 @@ class VolumeEstimator():
 
     def scale_with_coin(self,img_bgr,point_cloud):
        # Scale depth map with coin detection (cx, cy, a, b, theta) 
-        scaling = 1
+        scaling = 100
 
         
         ellipse_params_scaled= self.get_ellipse_params(img_bgr)
@@ -183,10 +185,7 @@ class VolumeEstimator():
 
 
         return scaling
-        
-
-
-        # Predict segmentation masks        
+  
 
 
     def estimate_volume(self, input_image_bgr, fov=70,coin_scale = False):
@@ -205,25 +204,13 @@ class VolumeEstimator():
         # Load input image and resize to model input size
         img = input_image_bgr
         input_image_shape = img.shape
+        print("input_image_shape" ,input_image_shape)
         img = cv2.resize(img, (self.model_input_shape[1],
                                self.model_input_shape[0]))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-        # now img is in rbg format
-
-        # Create intrinsics matrix
         intrinsics_mat = self.__create_intrinsics_matrix(input_image_shape, fov)
         intrinsics_inv = np.linalg.inv(intrinsics_mat)
-
-        # Predict depth
-        
-
-        # disparity_map = (self.min_disp + (self.max_disp - self.min_disp) 
-        #                  * inverse_depth)
-
         depth = self.get_depth_from_image(img)
-
-
         # depth is now numpy 
         # Convert depth map to point cloud
         depth_tensor = K.variable(np.expand_dims(depth, 0))
@@ -231,20 +218,19 @@ class VolumeEstimator():
         point_cloud = K.eval(get_cloud(depth_tensor, intrinsics_inv_tensor))
         print("Done createing point_cloud")
         point_cloud_flat = np.reshape( point_cloud, (point_cloud.shape[1] * point_cloud.shape[2], 3))
-
-        # print(point_cloud)
+        print("point_cloud -->",point_cloud[0,1,1])
         print(point_cloud.shape)
         print(point_cloud_flat.shape)
-
-
-
-
         # Scale depth map with coin detection
         print("Use sacle ?",coin_scale)
-
         if coin_scale:
             print("Use scale")
             scaling = self.scale_with_coin(input_image_bgr,point_cloud)
+            depth = scaling * depth
+            point_cloud = scaling * point_cloud
+            point_cloud_flat = scaling * point_cloud_flat
+        else:
+            scaling = 100
             depth = scaling * depth
             point_cloud = scaling * point_cloud
             point_cloud_flat = scaling * point_cloud_flat
@@ -283,7 +269,6 @@ class VolumeEstimator():
 
 
             # Filter outlier points
-            # object_points_filtered, sor_mask = sor_filter(object_points, 2, 0.7)
             object_points_filtered = object_points
 
 
@@ -316,6 +301,132 @@ class VolumeEstimator():
         estimated_volumes["total"] = total_volume
         return estimated_volumes
 
+    def visualization_volume(self, input_image_bgr, fov=70,coin_scale=True,mark_coin_point =True,alpha_list = [0.01]):
+        img = input_image_bgr
+        input_image_shape = img.shape
+        print("input_image_shape" ,input_image_shape)
+        img = cv2.resize(img, (self.model_input_shape[1],
+                            self.model_input_shape[0]))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        intrinsics_mat = self.__create_intrinsics_matrix(input_image_shape, fov)
+        intrinsics_inv = np.linalg.inv(intrinsics_mat)
+        depth = self.get_depth_from_image(img)
+        depth_tensor = K.variable(np.expand_dims(depth, 0))
+        intrinsics_inv_tensor = K.variable(np.expand_dims(intrinsics_inv, 0))
+        point_cloud = K.eval(get_cloud(depth_tensor, intrinsics_inv_tensor))
+        print("Done createing point_cloud")
+
+        point_cloud_flat = np.reshape( point_cloud, (point_cloud.shape[1] * point_cloud.shape[2], 3))
+        print("point_cloud -->",point_cloud.shape)
+        print("flat_point_cloud -->",point_cloud_flat.shape)
+
+        print("Use sacle ?",coin_scale)
+        if coin_scale:
+            print("Use scale")
+            scaling = self.scale_with_coin(input_image_bgr,point_cloud)
+            depth = scaling * depth
+            point_cloud = scaling * point_cloud
+            point_cloud_flat = scaling * point_cloud_flat
+
+            if mark_coin_point:
+                print("marking_point_coin")
+                        #mark coin point 
+
+                ellipse_params_scaled= self.get_ellipse_params(input_image_bgr)
+                coin_point_1 = [int(ellipse_params_scaled[2] 
+                                    * np.sin(ellipse_params_scaled[4]) 
+                                    + ellipse_params_scaled[1]), 
+                                    int(ellipse_params_scaled[2] 
+                                    * np.cos(ellipse_params_scaled[4]) 
+                                    + ellipse_params_scaled[0])]
+                coin_point_2 = [int(-ellipse_params_scaled[2] 
+                                    * np.sin(ellipse_params_scaled[4]) 
+                                    + ellipse_params_scaled[1]),
+                                    int(-ellipse_params_scaled[2] 
+                                    * np.cos(ellipse_params_scaled[4]) 
+                                    + ellipse_params_scaled[0])]
+                img[coin_point_1[0],coin_point_1[1] ]= [235, 52, 225]
+                img[coin_point_2[0],coin_point_2[1] ]= [235, 52, 225]
+        else:
+            #convert from meter to centemer
+            scaling = 100
+            depth = scaling * depth
+            point_cloud = scaling * point_cloud
+            point_cloud_flat = scaling * point_cloud_flat
+
+
+
+        image_color_flat = np.reshape( img ,(img.shape[0] * img.shape[1], 3))/255
+        print("image flat --->",image_color_flat.shape)
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(point_cloud_flat)
+        pcd.colors = o3d.utility.Vector3dVector(image_color_flat)
+        o3d.visualization.draw_geometries([pcd])
+
+        for alpha in alpha_list:
+            print(f"alpha={alpha:.3f}")
+            mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd, alpha)
+            mesh.compute_vertex_normals()
+            o3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
+
+    def visualization_point_clound(self, input_image_bgr, fov=70,coin_scale=True,mark_coin_point =True):
+        img = input_image_bgr
+        input_image_shape = img.shape
+        print("input_image_shape" ,input_image_shape)
+        img = cv2.resize(img, (self.model_input_shape[1],
+                            self.model_input_shape[0]))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        intrinsics_mat = self.__create_intrinsics_matrix(input_image_shape, fov)
+        intrinsics_inv = np.linalg.inv(intrinsics_mat)
+        depth = self.get_depth_from_image(img)
+        depth_tensor = K.variable(np.expand_dims(depth, 0))
+        intrinsics_inv_tensor = K.variable(np.expand_dims(intrinsics_inv, 0))
+        point_cloud = K.eval(get_cloud(depth_tensor, intrinsics_inv_tensor))
+        print("Done createing point_cloud")
+
+        point_cloud_flat = np.reshape( point_cloud, (point_cloud.shape[1] * point_cloud.shape[2], 3))
+        print("point_cloud -->",point_cloud.shape)
+        print("flat_point_cloud -->",point_cloud_flat.shape)
+
+        print("Use sacle ?",coin_scale)
+        if coin_scale:
+            print("Use scale")
+            scaling = self.scale_with_coin(input_image_bgr,point_cloud)
+            depth = scaling * depth
+            point_cloud = scaling * point_cloud
+            point_cloud_flat = scaling * point_cloud_flat
+
+            if mark_coin_point:
+                print("marking_point_coin")
+                        #mark coin point 
+
+                ellipse_params_scaled= self.get_ellipse_params(input_image_bgr)
+                coin_point_1 = [int(ellipse_params_scaled[2] 
+                                    * np.sin(ellipse_params_scaled[4]) 
+                                    + ellipse_params_scaled[1]), 
+                                    int(ellipse_params_scaled[2] 
+                                    * np.cos(ellipse_params_scaled[4]) 
+                                    + ellipse_params_scaled[0])]
+                coin_point_2 = [int(-ellipse_params_scaled[2] 
+                                    * np.sin(ellipse_params_scaled[4]) 
+                                    + ellipse_params_scaled[1]),
+                                    int(-ellipse_params_scaled[2] 
+                                    * np.cos(ellipse_params_scaled[4]) 
+                                    + ellipse_params_scaled[0])]
+                img[coin_point_1[0],coin_point_1[1] ]= [235, 52, 225]
+                img[coin_point_2[0],coin_point_2[1] ]= [235, 52, 225]
+
+
+
+        image_color_flat = np.reshape( img ,(img.shape[0] * img.shape[1], 3))/255
+        print("image flat --->",image_color_flat.shape)
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(point_cloud_flat)
+        pcd.colors = o3d.utility.Vector3dVector(image_color_flat)
+        o3d.visualization.draw_geometries([pcd])
+
     def __create_intrinsics_matrix(self, input_image_shape, fov):
         """Create intrinsics matrix from given camera fov.
 
@@ -339,47 +450,14 @@ class VolumeEstimator():
 
 
 
-# if __name__ == '__main__':
-#     estimator = VolumeEstimator()
-
-#     # Iterate over input images to estimate volumes
-#     results = {'image_path': [], 'volumes': []}
-#     for input_image in estimator.args.input_images:
-#         print('[*] Input:', input_image)
-#         volumes = estimator.estimate_volume(
-#             input_image, estimator.args.fov, 
-#             estimator.args.plate_diameter_prior, estimator.args.plot_results,
-#             estimator.args.plots_directory)
-
-#         # Store results per input image
-#         results['image_path'].append(input_image)
-#         if (estimator.args.plot_results 
-#             or estimator.args.plots_directory is not None):
-#             results['volumes'].append([x[0] * 1000 for x in volumes])
-#             plt.close('all')
-#         else:
-#             results['volumes'].append(volumes * 1000)
-
-#         # Print weight if density database is given
-#         if estimator.args.density_db is not None:
-#             db_entry = estimator.density_db.query(
-#                 estimator.args.food_type)
-#             density = db_entry[1]
-#             print('[*] Density database match:', db_entry)
-#             # All foods found in the input image are considered to be
-#             # of the same type
-#             for v in results['volumes'][-1]:
-#                 print('[*] Food weight:', 1000 * v * density, 'g')
-
-#     if estimator.args.results_file is not None:
-#         # Save results in CSV format
-#         volumes_df = pd.DataFrame(data=results)
-#         volumes_df.to_csv(estimator.args.results_file, index=False)
-
 
 if __name__ == '__main__':
     volumeEstimator = VolumeEstimator()
-    img = cv2.imread("imgs/coin-img.jpg")
+    img = cv2.imread("imgs/test1.jpg")
     print("image size ",img.shape)
     # volumeEstimator.
-    volumeEstimator.get_point_cloud(img)
+    # for fov in [20,30,50,70]:
+    #     print("fov ---> ",fov)
+    #     volumeEstimator.visualization_point_clound(img,fov,True,True)
+    # volumeEstimator.visualization_point_clound(img,70,True,False)
+    volumeEstimator.visualization_volume(img,70,True,True,[1.0])

@@ -30,7 +30,7 @@ def inference():
     byte_arr = file.read()
     args = request.args
     fov = args.get('fov', default=70, type=int) 
-    scale_coin = args.get('fov', default=True, type=bool) 
+    scale_coin =  args.get('scale_coin', default=False, type=lambda v: v.lower() == 'true')
     print("params---> ",fov,scale_coin)
     img_numpy = np.frombuffer(byte_arr, np.uint8)
     return volume_estimation_inference(img_numpy,fov,scale_coin)
@@ -45,7 +45,7 @@ def totalVolume():
     img_numpy = np.frombuffer(byte_arr, np.uint8)
     args = request.args
     fov = args.get('fov', default=70, type=int) 
-    scale_coin = args.get('fov', default=True, type=bool) 
+    scale_coin =  args.get('scale_coin', default=False, type=lambda v: v.lower() == 'true')
     print("params---> ",fov,scale_coin)
     return {"prediction":volume_estimation_inference(img_numpy,fov,scale_coin)["prediction"]["total"]}
 

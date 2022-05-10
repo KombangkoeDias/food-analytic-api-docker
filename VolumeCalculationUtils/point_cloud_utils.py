@@ -102,7 +102,7 @@ def sor_filter(points, z_max=1, inlier_ratio=0.5):
     inliers = points[sor_mask]
     return inliers, sor_mask
 
-def pc_to_volume(points, alpha=0.01):
+def pc_to_volume(points, alpha=1):
     """Compute the volume of a point cloud using the alpha shape.
     Alpha shape computation modified from
     http://blog.thehumangeo.com/2014/05/12/drawing-boundaries-in-python/
