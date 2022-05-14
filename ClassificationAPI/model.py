@@ -3,6 +3,7 @@ import torch
 from torch import nn
 from .config import config
 
+
 class foodNet(nn.Module):
   def __init__(self):
     super(foodNet, self).__init__()
@@ -10,8 +11,10 @@ class foodNet(nn.Module):
     self.pretrained_model.head.fc = nn.Linear(self.pretrained_model.head.fc.in_features, len(config["idx_to_class"]))
 
   def forward(self, input):
+    input = input.to(device)
     x = self.pretrained_model(input)
     return x
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = foodNet()
