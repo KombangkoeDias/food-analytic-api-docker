@@ -2,7 +2,7 @@ import timm
 import torch
 from torch import nn
 from .config import config
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 class foodNet(nn.Module):
   def __init__(self):
@@ -15,6 +15,8 @@ class foodNet(nn.Module):
     x = self.pretrained_model(input)
     return x
 
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = foodNet()
 model.to(device)
 model.load_state_dict(torch.load(config["model_weight_filepath"], map_location=device))
