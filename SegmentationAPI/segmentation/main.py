@@ -5,6 +5,7 @@ from mmseg.apis import inference_segmentor
 from .model import model
 from .utils import config
 import numpy as np
+import cv2
 
 class SegmentationInferenceWrapper():
     def __init__(self, model):
