@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_ngrok import run_with_ngrok
 from template_api import template_api
 from DepthAPI import depth_api
 from SegmentationAPI import segmentation_api
@@ -21,6 +22,7 @@ app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 app.config['DEBUG'] = True
 
 CORS(app)
+run_with_ngrok(app)
 
 @app.route("/")
 def hello():
